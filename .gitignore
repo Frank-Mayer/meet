@@ -1,0 +1,14 @@
+dist/
+node_modules/
+package-lock.json
+yarn.lock
+bun.lockb
+.parcel-cache/
+*.log
+*.log.*
+*.log-*
+*.zip
+*.gz
+*.tgz
+*.map
+.DS_Store

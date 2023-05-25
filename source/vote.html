@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Vote for this Meeting</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+
+    <body>
+        <h1 id="title">Meet</h1>
+
+        <noscript>
+            <p>
+                Your browser does not allow to run JavaScript which is required
+                for this app to work. Please enable JavaScript.
+            </p>
+        </noscript>
+
+        <h2>Select your name if it is in this list</h2>
+        <select id="user"></select>
+
+        <h2>Or add your name to the list</h2>
+        <form id="add_user_form">
+            <label>
+                Name
+                <input type="text" id="add_user" />
+            </label>
+        </form>
+
+        <h2>Add time spans when you are available</h2>
+        <div id="my_votes"></div>
+        <button id="add_vote">Add Time Span</button>
+        <button id="save_votes">Save Votes</button>
+
+        <script defer async src="./script/vote.ts" type="module"></script>
+    </body>
+</html>
