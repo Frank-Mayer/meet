@@ -1,58 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <title>Meet</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
 
-<head>
-    <title>Meet</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
+    <body>
+        <h1>Meet</h1>
+        <a href="https://github.com/Frank-Mayer/meet" target="_blank"
+            >Source code on GitHub</a
+        >
 
-<body>
-    <h1>Meet</h1>
+        <noscript>
+            <p>
+                Your browser does not allow to run JavaScript which is required
+                for this app to work. Please enable JavaScript.
+            </p>
+        </noscript>
 
-    <noscript>
         <p>
-            Your browser does not allow to run JavaScript which is required
-            for this app to work. Please enable JavaScript.
+            Meet is a simple web application that allows you to find a time slot
+            that works for everyone.
         </p>
-    </noscript>
 
-    <p>
-        Meet is a simple web application that allows you to find a time slot
-        that works for everyone.
-    </p>
+        <h2>How it works</h2>
+        <ol>
+            <li>Set a time span when you want to meet</li>
+            <li>Create a link for everyone to vote on a time</li>
+            <li>Share the link with your friends</li>
+            <li>Everyone votes on a time that works for them</li>
+            <li>Meet will tell you the best time to meet</li>
+        </ol>
 
-    <h2>How it works</h2>
-    <ol>
-        <li>Set a time span when you want to meet</li>
-        <li>Create a link for everyone to vote on a time</li>
-        <li>Share the link with your friends</li>
-        <li>Everyone votes on a time that works for them</li>
-        <li>Meet will tell you the best time to meet</li>
-    </ol>
+        <h2>Let's meet!</h2>
+        <form id="create_form">
+            <input type="hidden" name="room" id="room_id" required readonly />
+            <label>
+                Event Title
+                <input type="text" name="title" id="title" required />
+            </label>
+            <br />
+            <label>
+                Start Time
+                <input type="datetime-local" name="start" id="start" required />
+            </label>
+            <br />
+            <label>
+                End Time
+                <input type="datetime-local" name="end" id="end" required />
+            </label>
+            <br />
+            <input type="submit" value="Create Link" />
+        </form>
 
-    <h2>Let's meet!</h2>
-    <form id="create_form">
-        <input type="hidden" name="room" id="room_id" required readonly />
-        <label>
-            Event Title
-            <input type="text" name="title" id="title" required />
-        </label>
-        <br />
-        <label>
-            Start Time
-            <input type="datetime-local" name="start" id="start" required />
-        </label>
-        <br />
-        <label>
-            End Time
-            <input type="datetime-local" name="end" id="end" required />
-        </label>
-        <br />
-        <input type="submit" value="Create Link" />
-    </form>
-
-    <script defer async src="./script/index.ts" type="module"></script>
-</body>
-
+        <script defer async src="./script/index.ts" type="module"></script>
+    </body>
 </html>
