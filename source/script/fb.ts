@@ -80,6 +80,15 @@ export async function getVotes (roomLocation: string, user: string): Promise<Arr
     return usersDataData[user] ?? panic("user not found");
 }
 
+/** get all votes in a room grouped by user */
+export async function getAllVotes (roomLocation: string): Promise<Record<string, Array<Vote>>> {
+    const room = await getRoom(roomLocation);
+    const users = doc(room, "users");
+    const usersData = await getDoc(users);
+    const usersDataData = usersData.data() ?? panic("users not found");
+    return usersDataData;
+}
+
 /** get meta of room */
 export async function getMeta (roomLocation: string): Promise<RoomMeta> {
     const room = await getRoom(roomLocation);

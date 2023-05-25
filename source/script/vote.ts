@@ -1,5 +1,13 @@
 import { panic } from "./error";
-import { Vote, addUser, getMeta, getUsers, getVotes, setVotes } from "./fb";
+import {
+    Vote,
+    addUser,
+    getAllVotes,
+    getMeta,
+    getUsers,
+    getVotes,
+    setVotes,
+} from "./fb";
 import { kvStore } from "./kvStore";
 
 const users = new Set<string>();
@@ -13,6 +21,7 @@ const usersEl = document.getElementById("user") as HTMLSelectElement;
 const myVotesListEl = document.getElementById("my_votes");
 const addVoteEl = document.getElementById("add_vote");
 const saveVotesEl = document.getElementById("save_votes");
+const outputEl = document.getElementById("output") as HTMLTableElement;
 let minDate = new Date().toISOString().slice(0, 16);
 let maxDate = new Date().toISOString().slice(0, 16);
 
@@ -38,6 +47,10 @@ if (!addVoteEl) {
 
 if (!saveVotesEl) {
     panic("No save votes element");
+}
+
+if (!outputEl) {
+    panic("No output element");
 }
 
 const userKey = `user-${room}`;
@@ -106,6 +119,130 @@ function createNewVoteEl(vote?: Vote) {
     return newVoteEl;
 }
 
+async function updateOutput() {
+    const votes = await getAllVotes(room!);
+    outputEl.innerHTML = "";
+
+    type UserVote = {
+        start: number;
+        end: number;
+        users: Set<string>;
+    };
+    const ranking = new Array<UserVote>();
+
+    const votesToProcess = new Array<UserVote>();
+    for (const user in votes) {
+        for (const vote of votes[user]) {
+            votesToProcess.push({
+                start: new Date(vote.from).getTime(),
+                end: new Date(vote.to).getTime(),
+                users: new Set<string>([user]),
+            });
+        }
+    }
+
+    merge_votes: while (votesToProcess.length > 0) {
+        const vote = votesToProcess.pop()!;
+        for (const existingVote of ranking) {
+            if (
+                vote.end <= existingVote.start ||
+                existingVote.end <= vote.start
+            ) {
+                continue;
+            }
+
+            // check start
+            if (vote.start < existingVote.start) {
+                votesToProcess.push({
+                    start: vote.start,
+                    end: existingVote.start,
+                    users: cloneSet(vote.users),
+                });
+                vote.start = existingVote.start;
+            } else if (existingVote.start < vote.start) {
+                votesToProcess.push({
+                    start: existingVote.start,
+                    end: vote.start,
+                    users: cloneSet(existingVote.users),
+                });
+            }
+
+            // check end
+            if (vote.end < existingVote.end) {
+                votesToProcess.push({
+                    start: vote.end,
+                    end: existingVote.end,
+                    users: cloneSet(existingVote.users),
+                });
+                existingVote.end = vote.end;
+                for (const user of vote.users) {
+                    existingVote.users.add(user);
+                }
+            } else if (existingVote.end < vote.end) {
+                votesToProcess.push({
+                    start: existingVote.end,
+                    end: vote.end,
+                    users: vote.users,
+                });
+                for (const user of vote.users) {
+                    existingVote.users.add(user);
+                }
+            } else {
+                for (const user of vote.users) {
+                    existingVote.users.add(user);
+                }
+            }
+
+            continue merge_votes;
+        }
+
+        ranking.push(vote);
+    }
+
+    // sort by most users then by largest time range
+    ranking.sort((a, b) => {
+        if(a.users.size > b.users.size) {
+            return -1;
+        }
+        if(a.users.size < b.users.size) {
+            return 1;
+        }
+        if(a.end - a.start > b.end - b.start) {
+            return -1;
+        }
+        if(a.end - a.start < b.end - b.start) {
+            return 1;
+        }
+        return 0;
+    });
+
+    for (const vote of ranking) {
+        const start = new Date(vote.start);
+        const end = new Date(vote.end);
+        const users = Array.from(vote.users)
+            .sort((a, b) => a.localeCompare(b))
+            .join(", ");
+        const voteEl = document.createElement("tr");
+        outputEl.appendChild(voteEl);
+        const startEl = document.createElement("td");
+        startEl.headers="th_start";
+        startEl.innerText = start.toLocaleString();
+        voteEl.appendChild(startEl);
+        const endEl = document.createElement("td");
+        endEl.headers="th_end";
+        endEl.innerText = end.toLocaleString();
+        voteEl.appendChild(endEl);
+        const usersEl = document.createElement("td");
+        usersEl.headers="th_users";
+        usersEl.innerText = users;
+        voteEl.appendChild(usersEl);
+    }
+}
+
+function cloneSet(set: Set<string>) {
+    return new Set<string>(set);
+}
+
 addUserFormEl.addEventListener("submit", async (event) => {
     event.preventDefault();
     const newUser = addUserEl.value.trim();
@@ -151,24 +288,28 @@ saveVotesEl.addEventListener("click", async () => {
     }
     await setVotes(room, usersEl.value, votes);
     alert("Votes saved");
+    updateOutput();
 });
 
-getUsers(room)
-    .then(async (usersData) => {
-        for (const user in usersData) {
-            users.add(user);
-        }
-        updateUsers(await kvStore.get(userKey));
-    })
-    .catch(panic);
-
-getMeta(room)
-    .then(async (meta) => {
-        minDate = meta.start;
-        maxDate = meta.end;
-        const titleEl = document.getElementById("title");
-        if (titleEl) {
-            titleEl.innerText = `Meet: "${meta.title}"`;
-        }
-    })
-    .catch(panic);
+Promise.all([
+    getUsers(room)
+        .then(async (usersData) => {
+            for (const user in usersData) {
+                users.add(user);
+            }
+            updateUsers(await kvStore.get(userKey));
+        })
+        .catch(panic),
+    getMeta(room)
+        .then(async (meta) => {
+            minDate = meta.start;
+            maxDate = meta.end;
+            const titleEl = document.getElementById("title");
+            if (titleEl) {
+                titleEl.innerText = `Meet: "${meta.title}"`;
+            }
+        })
+        .catch(panic),
+]).then(() => {
+    updateOutput();
+});

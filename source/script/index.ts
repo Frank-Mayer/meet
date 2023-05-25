@@ -1,6 +1,8 @@
 import { panic } from "./error";
 import { getRoom } from "./fb";
 
+console.log("index.ts");
+
 // generate room id
 const roomIdEl = document.getElementById("room_id") as HTMLInputElement | null;
 if (!roomIdEl) {
@@ -44,12 +46,15 @@ const getIsoTimeNoSeconds = (date: Date) => date.toISOString().substring(0, 16);
 startEl.value = getIsoTimeNoSeconds(today);
 endEl.value = getIsoTimeNoSeconds(nextWeek);
 
-createFormEl.addEventListener("submit", async (event) => {
+createFormEl.addEventListener("submit", (event) => {
     event.preventDefault();
-    await getRoom(guid, {
+    getRoom(guid, {
         title: titleEl.value,
         start: startEl.value,
         end: endEl.value,
-    });
-    window.location.assign(`/vote.html?room=${guid}`);
+    })
+        .then(() => {
+            window.location.assign(`/vote.html?room=${guid}`);
+        })
+        .catch(panic);
 });
